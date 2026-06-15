@@ -292,8 +292,6 @@
   --cream:#FFE7E6;      /* card / surface */
   --copper:#BD804A;     /* accent */
   --pink:#F8D2D1;       /* secondary */
-  --navy-2:#3E6E80;     /* lighter teal (wordmark) */
-  --ink:#1c333f;
   --display:'Oswald','Archivo Narrow','Anton','Helvetica Neue Condensed',Impact,sans-serif;
   --body:'Figtree',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
 }
@@ -305,7 +303,7 @@ body { margin:0; font-family:var(--body); color:var(--navy); background:var(--na
 .masthead { background:var(--cream); border-radius:18px; padding:30px 28px 26px; margin-bottom:22px; text-align:center; }
 .wordmark { font-family:var(--display); font-weight:700; text-transform:uppercase; line-height:.86;
   font-size:clamp(40px,8vw,76px); letter-spacing:-0.5px; margin:0; }
-.wordmark .l { color:var(--navy-2); } .wordmark .d { color:var(--navy); }
+.wordmark .l, .wordmark .d { color:var(--navy); }
 .byline { font-family:var(--display); font-weight:600; letter-spacing:.18em; text-transform:uppercase;
   color:var(--copper); font-size:clamp(13px,2.2vw,17px); margin:10px 0 0; }
 .sub { color:var(--navy); opacity:.7; font-size:14px; margin:14px 0 0; font-weight:500; }
@@ -350,7 +348,16 @@ body.edit .milestones-add { display:flex; }
 .editbar b { font-family:var(--display); text-transform:uppercase; letter-spacing:.05em; }
 .editbar.hidden { display:none; }
 .banner { background:var(--copper); border:none; color:#fff; border-radius:10px; padding:11px 16px; font-size:13px; margin-bottom:18px; font-weight:500; }
-.toggle { position:fixed; bottom:14px; right:14px; font-size:11px; color:var(--cream); background:var(--navy); border:1px solid var(--navy-2); border-radius:8px; padding:6px 11px; cursor:pointer; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+.toggle { position:fixed; bottom:14px; right:14px; font-size:11px; color:var(--cream); background:var(--navy); border:1px solid var(--copper); border-radius:8px; padding:6px 11px; cursor:pointer; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+/* hero — big projected-date box */
+.hero-wrap { display:grid; grid-template-columns:1.1fr 1fr; gap:22px; margin-bottom:22px; align-items:stretch; }
+@media (max-width:720px){ .hero-wrap { grid-template-columns:1fr; } }
+.hero { background:var(--navy); color:var(--cream); border-radius:18px; padding:26px 28px; display:flex; flex-direction:column; justify-content:center; }
+.hero-label { font-family:var(--display); font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:13px; color:var(--copper); margin-bottom:6px; }
+.hero-date { font-family:var(--display); font-weight:700; line-height:.92; font-size:clamp(46px,7vw,70px); letter-spacing:-0.5px; color:#fff; }
+.hero-sub { margin-top:12px; font-size:14px; font-weight:500; opacity:.85; }
+.hero-sub .tag { display:inline-block; font-weight:800; text-transform:uppercase; letter-spacing:.04em; font-size:11px; padding:3px 10px; border-radius:999px; background:var(--copper); color:#fff; margin-right:8px; }
+.hero-wrap .card { margin-bottom:0; }
 .empty { color:var(--navy); opacity:.6; font-size:13px; padding:8px 0; }
 </style>
 </head>
@@ -372,16 +379,23 @@ body.edit .milestones-add { display:flex; }
     <button class="secondary" id="exitEdit">Done</button>
   </div>
 
-  <div class="card">
-    <h2>Milestones</h2>
-    <div class="milestones" id="msList"></div>
-    <div class="empty" id="msEmpty" style="display:none">No milestones set.</div>
-    <div class="row milestones-add owner-only" style="margin-top:16px;">
-      <div class="field"><label>Channel</label>
-        <select id="msChannel"><option value="ig">Instagram</option></select></div>
-      <div class="field"><label>Target</label><input type="number" id="msTarget" placeholder="1000000" min="0"></div>
-      <div class="field"><label>Date</label><input type="date" id="msDate"></div>
-      <button id="addMs">Add milestone</button>
+  <div class="hero-wrap">
+    <div class="hero" id="heroCard">
+      <div class="hero-label" id="heroLabel">Projected to reach 1,000,000</div>
+      <div class="hero-date" id="heroDate">—</div>
+      <div class="hero-sub" id="heroSub"></div>
+    </div>
+    <div class="card">
+      <h2>Milestone</h2>
+      <div class="milestones" id="msList"></div>
+      <div class="empty" id="msEmpty" style="display:none">No milestones set.</div>
+      <div class="row milestones-add owner-only" style="margin-top:16px;">
+        <div class="field"><label>Channel</label>
+          <select id="msChannel"><option value="ig">Instagram</option></select></div>
+        <div class="field"><label>Target</label><input type="number" id="msTarget" placeholder="1000000" min="0"></div>
+        <div class="field"><label>Date</label><input type="date" id="msDate"></div>
+        <button id="addMs">Add milestone</button>
+      </div>
     </div>
   </div>
 
@@ -410,7 +424,7 @@ const fmt = n => n==null?"—":Math.round(n).toLocaleString();
 const todayISO = () => new Date().toISOString().slice(0,10);
 const dayMs = 86400000;
 const parseD = s => new Date(s+"T00:00:00");
-const COLORS = { ig:"#214050", tt:"#BD804A", cb:"#3E6E80" };  // brand: navy / copper / teal
+const COLORS = { ig:"#214050", tt:"#BD804A", cb:"#214050" };  // brand: navy / copper
 const FORECAST = "#BD804A";  // copper dashed forecast line
 const LABELS = { ig:"Instagram", tt:"TikTok", cb:"Combined" };
 const CHANNELS = ["ig"];  // channels shown on the chart (add "tt" when TikTok data is loaded)
@@ -454,6 +468,11 @@ function renderChart(){
   const x0=parseD(s[0].date).getTime(), toX=ms=>(ms-x0)/dayMs;
   const lastMs=parseD(s[s.length-1].date).getTime(); let maxMs=lastMs+30*dayMs;
   state.milestones.forEach(m=>{const d=parseD(m.date).getTime(); if(d>maxMs) maxMs=d;});
+  // clean headroom: take the y-axis 20% above the top milestone (1M -> 1.2M)
+  const topTarget=state.milestones.reduce((a,m)=>Math.max(a,m.target),0);
+  const ceiling=topTarget>0?Math.ceil(topTarget*1.2/100000)*100000:null;
+  // extend the forecast/x-axis to the date growth would reach that ceiling, so the dashed line climbs past 1M
+  if(ceiling){const tIg=trend("ig"); if(tIg&&tIg.slope>0){const hit=tIg.x0+((ceiling-tIg.intercept)/tIg.slope)*dayMs; if(hit>maxMs) maxMs=hit;}}
   const ds=[];
   CHANNELS.forEach(ch=>{
     if(!channelHasData(ch)) return;
@@ -472,7 +491,7 @@ function renderChart(){
   const NAVY="#214050", GRID="rgba(33,64,80,.12)", FONT="Figtree, sans-serif";
   chart=new Chart(ctx,{type:"line",data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,
     scales:{x:{type:"linear",min:0,max:toX(maxMs),grid:{color:GRID},ticks:{stepSize:30,color:NAVY,font:{family:FONT,size:11},callback:v=>fmtD(v)}},
-      y:{beginAtZero:false,grid:{color:GRID},ticks:{color:NAVY,font:{family:FONT,size:11},callback:v=>v>=1000?(v/1000)+"k":v}}},
+      y:{beginAtZero:false,max:ceiling||undefined,grid:{color:GRID},ticks:{color:NAVY,font:{family:FONT,size:11},callback:v=>v>=1000?(v/1000)+"k":v}}},
     plugins:{legend:{labels:{boxWidth:12,color:NAVY,font:{family:FONT,size:12}}},
       tooltip:{titleFont:{family:FONT},bodyFont:{family:FONT},callbacks:{title:i=>i.length?fmtF(x0+i[0].parsed.x*dayMs):"",label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`}}}}});
 }
@@ -525,7 +544,23 @@ function renderHeader(){
   document.getElementById("hUpdated").textContent="Last updated "+(state.updated||todayISO());
   document.getElementById("phBanner").style.display=state.placeholder?"block":"none";
 }
-function renderAll(){ persist(); renderHeader(); renderMilestones(); renderSnaps(); renderChart(); }
+function renderHero(){
+  const el=document.getElementById("heroDate"), sub=document.getElementById("heroSub"), lab=document.getElementById("heroLabel");
+  const m=state.milestones[0];
+  if(!m){ el.textContent="—"; sub.textContent="No milestone set."; lab.textContent="Projected milestone date"; return; }
+  lab.textContent="Projected to reach "+fmt(m.target);
+  const t=trend(m.channel), cur=t?t.latestVal:null;
+  if(cur!=null&&cur>=m.target){ el.textContent="Reached"; sub.innerHTML=`<span class="tag">Done 🎉</span>Hit ${fmt(m.target)} followers.`; return; }
+  if(!t||t.slope<=0){ el.textContent="—"; sub.textContent="Add 2+ snapshots showing growth to project a date."; return; }
+  const pdMs=projectDate(m.channel,m.target), targetMs=parseD(m.date).getTime();
+  el.textContent=new Date(pdMs).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
+  const onTrack=pdMs<=targetMs, days=Math.abs(Math.round((targetMs-pdMs)/dayMs));
+  const tgtShort=new Date(targetMs).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+  const tag=onTrack?`<span class="tag">On track</span>`:`<span class="tag" style="background:var(--pink);color:var(--navy)">Behind</span>`;
+  const rel=onTrack?`${days} days before the ${tgtShort} target`:`${days} days past the ${tgtShort} target`;
+  sub.innerHTML=`${tag}${rel} · at ~${fmt(t.slope*7)}/wk`;
+}
+function renderAll(){ persist(); renderHeader(); renderHero(); renderMilestones(); renderSnaps(); renderChart(); }
 
 // ---- owner mode ----
 function enterEdit(){ document.body.classList.add("edit"); document.getElementById("editbar").classList.remove("hidden"); }
