@@ -457,7 +457,7 @@ body.edit .milestones-add { display:flex; }
   <div class="card">
     <h2>Growth &amp; projection</h2>
     <div class="chart-box"><canvas id="chart"></canvas></div>
-    <p class="legend-note">Navy solid = recorded follower count (the up-and-down). Navy dashed = 12-month linear trend, projected forward. Copper = company budget target. ◆ = 1M milestone.</p>
+    <p class="legend-note">Navy solid = recorded follower count (the up-and-down). Navy dashed = 12-month linear trend, projected forward. Copper line = company budget target. The copper vertical line marks the projected date the trend reaches 1,000,000.</p>
   </div>
 
   <div class="card">
@@ -544,13 +544,29 @@ function renderChart(){
     ds.push({label:"Budget target", data:state.targets.map(p=>({x:toX(parseD(p.date).getTime()),y:p.value})),
       borderColor:FORECAST, backgroundColor:FORECAST, tension:0, pointRadius:2.5, borderWidth:2.5, fill:false});
   }
-  const mp=state.milestones.map(m=>({x:toX(parseD(m.date).getTime()),y:m.target}));
-  if(mp.length) ds.push({label:"Milestone", data:mp, showLine:false, pointStyle:"rectRot", pointRadius:9,
-    pointBackgroundColor:FORECAST, pointBorderColor:"#fff", pointBorderWidth:2});
   const fmtD=x=>new Date(x0+x*dayMs).toLocaleDateString(undefined,{month:"short",year:"2-digit"});
   const fmtF=ms=>new Date(ms).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
-  const NAVY="#214050", GRID="rgba(33,64,80,.12)", FONT="Figtree, sans-serif";
-  chart=new Chart(ctx,{type:"line",data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,
+  const NAVY="#214050", GRID="rgba(33,64,80,.12)", FONT="Figtree, sans-serif", COPPER="#BD804A";
+  // projected date the 12-month trend reaches 1M -> vertical marker + bold x-axis date
+  let projX=null, projLabel="", projY=null;
+  {const tt=trend("ig"), tgt=topTarget||1000000;
+   if(tt&&tt.slope>0){const pms=projectDate("ig",tgt); projX=toX(pms); projY=tgt;
+     projLabel=new Date(pms).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});}}
+  const projPlugin={id:"projLine", afterDatasetsDraw(c){
+    if(projX==null) return; const cx=c.ctx, a=c.chartArea, sc=c.scales;
+    const px=sc.x.getPixelForValue(projX); if(px<a.left||px>a.right) return;
+    const py=sc.y.getPixelForValue(projY);
+    cx.save();
+    cx.strokeStyle=COPPER; cx.lineWidth=2; cx.setLineDash([5,4]);
+    cx.beginPath(); cx.moveTo(px,a.top); cx.lineTo(px,a.bottom); cx.stroke();
+    cx.setLineDash([]); cx.fillStyle=COPPER; cx.textAlign="center";
+    cx.beginPath(); cx.arc(px,py,4.5,0,7); cx.fill();
+    cx.font="700 11px "+FONT; cx.fillText("1M",px,a.top+11);
+    cx.font="800 13px "+FONT; cx.fillText(projLabel,px,a.bottom+34);
+    cx.restore();
+  }};
+  chart=new Chart(ctx,{type:"line",data:{datasets:ds},plugins:[projPlugin],options:{responsive:true,maintainAspectRatio:false,
+    layout:{padding:{bottom:28,top:4}},
     scales:{x:{type:"linear",min:0,max:toX(maxMs),grid:{color:GRID},ticks:{stepSize:30,color:NAVY,font:{family:FONT,size:11},callback:v=>fmtD(v)}},
       y:{beginAtZero:false,max:ceiling||undefined,grid:{color:GRID},ticks:{color:NAVY,font:{family:FONT,size:11},callback:v=>v>=1000?(v/1000)+"k":v}}},
     plugins:{legend:{labels:{boxWidth:12,color:NAVY,font:{family:FONT,size:12}}},
