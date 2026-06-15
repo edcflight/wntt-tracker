@@ -675,6 +675,29 @@ document.getElementById("download").onclick=()=>{
 document.getElementById("snapDate").value=todayISO();
 document.getElementById("msDate").value="2026-09-30";
 renderAll();
+
+// ---- live data from the published Google Sheet (WNTT Follower Tracker) ----
+// Sheet columns: A = Date (YYYY-MM-DD), B = Instagram followers. Edit the sheet to update the page.
+const SHEET_CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vSVhgpjjgUgrrS88OxqKSg_LMYGksK_1NgPfbqyfuizHCTX_CgE4BiPUFHveb6RMK5J_CrJQvxQ43Zq/pub?gid=0&single=true&output=csv";
+function parseSheetCSV(text){
+  return text.trim().split(/\r?\n/).slice(1).map(line=>{
+    const c=line.split(","); const date=(c[0]||"").trim();
+    return {date, ig:parseInt((c[1]||"").replace(/[^0-9]/g,""))||0, tt:0};
+  }).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date) && r.ig>0)
+    .sort((a,b)=>a.date<b.date?-1:1);
+}
+function loadFromSheet(){
+  fetch(SHEET_CSV+"&_="+Date.now()).then(r=>r.ok?r.text():Promise.reject(r.status)).then(txt=>{
+    const rows=parseSheetCSV(txt);
+    if(rows.length>=2){
+      state.snaps=rows;
+      state.updated=rows[rows.length-1].date;
+      state.placeholder=false;
+      renderAll();
+    }
+  }).catch(()=>{/* offline or sandboxed view: keep the baked-in numbers */});
+}
+loadFromSheet();
 </script>
 </body>
 </html>
