@@ -11,7 +11,7 @@
 {
   "title": "NeedToTalk — Road to 1M",
   "subtitle": "We Need To Talk · Instagram follower growth toward 1,000,000.",
-  "updated": "2026-05-31",
+  "updated": "2026-06-14",
   "placeholder": false,
   "snaps": [
     {
@@ -268,6 +268,11 @@
       "date": "2026-05-31",
       "ig": 818691,
       "tt": 0
+    },
+    {
+      "date": "2026-06-14",
+      "ig": 819776,
+      "tt": 0
     }
   ],
   "milestones": [
@@ -275,6 +280,56 @@
       "channel": "ig",
       "target": 1000000,
       "date": "2026-09-30"
+    }
+  ],
+  "targets": [
+    {
+      "date": "2025-12-31",
+      "value": 600000
+    },
+    {
+      "date": "2026-01-31",
+      "value": 650000
+    },
+    {
+      "date": "2026-02-28",
+      "value": 700000
+    },
+    {
+      "date": "2026-03-31",
+      "value": 750000
+    },
+    {
+      "date": "2026-04-30",
+      "value": 800000
+    },
+    {
+      "date": "2026-05-31",
+      "value": 850000
+    },
+    {
+      "date": "2026-06-30",
+      "value": 900000
+    },
+    {
+      "date": "2026-07-31",
+      "value": 950000
+    },
+    {
+      "date": "2026-08-31",
+      "value": 1000000
+    },
+    {
+      "date": "2026-09-30",
+      "value": 1050000
+    },
+    {
+      "date": "2026-10-31",
+      "value": 1100000
+    },
+    {
+      "date": "2026-11-30",
+      "value": 1150000
     }
   ]
 }
@@ -402,7 +457,7 @@ body.edit .milestones-add { display:flex; }
   <div class="card">
     <h2>Growth &amp; projection</h2>
     <div class="chart-box"><canvas id="chart"></canvas></div>
-    <p class="legend-note">Solid = recorded counts. Dashed = projection from recent average growth (linear fit, last 6 snapshots). ◆ = milestone target.</p>
+    <p class="legend-note">Navy solid = recorded follower count (the up-and-down). Navy dashed = 12-month linear trend, projected forward. Copper = company budget target. ◆ = 1M milestone.</p>
   </div>
 
   <div class="card">
@@ -447,7 +502,7 @@ function sortedSnaps(){ return [...state.snaps].sort((a,b)=> a.date<b.date?-1:1)
 function valFor(s,ch){ return ch==="cb"?(s.ig||0)+(s.tt||0):(s[ch]||0); }
 function channelHasData(ch){ return sortedSnaps().some(s=>valFor(s,ch)>0); }
 
-function trend(ch,N=6){
+function trend(ch,N=9999){  // default: linear fit over ALL snapshots (~12 months)
   const s=sortedSnaps().filter(p=>valFor(p,ch)>0);
   if(s.length<2) return null;
   const pts=s.slice(-N), x0=parseD(pts[0].date).getTime();
@@ -468,6 +523,7 @@ function renderChart(){
   const x0=parseD(s[0].date).getTime(), toX=ms=>(ms-x0)/dayMs;
   const lastMs=parseD(s[s.length-1].date).getTime(); let maxMs=lastMs+30*dayMs;
   state.milestones.forEach(m=>{const d=parseD(m.date).getTime(); if(d>maxMs) maxMs=d;});
+  (state.targets||[]).forEach(t=>{const d=parseD(t.date).getTime(); if(d>maxMs) maxMs=d;});
   // clean headroom: take the y-axis 20% above the top milestone (1M -> 1.2M)
   const topTarget=state.milestones.reduce((a,m)=>Math.max(a,m.target),0);
   const ceiling=topTarget>0?Math.ceil(topTarget*1.2/100000)*100000:null;
@@ -479,10 +535,15 @@ function renderChart(){
     ds.push({label:LABELS[ch], data:s.filter(p=>valFor(p,ch)>0).map(p=>({x:toX(parseD(p.date).getTime()),y:valFor(p,ch)})),
       borderColor:COLORS[ch], backgroundColor:COLORS[ch], tension:.25, pointRadius:3, borderWidth:2});
     const t=trend(ch);
-    if(t&&t.slope>0) ds.push({label:LABELS[ch]+" (forecast)",
-      data:[{x:toX(t.latestDate),y:t.latestVal},{x:toX(maxMs),y:projectAt(ch,maxMs)}],
-      borderColor:FORECAST, borderDash:[6,5], pointRadius:0, borderWidth:2, fill:false});
+    if(t&&t.slope>0) ds.push({label:LABELS[ch]+" · 12-mo trend",
+      data:[{x:0,y:t.intercept},{x:toX(maxMs),y:projectAt(ch,maxMs)}],
+      borderColor:COLORS[ch], borderDash:[8,4], pointRadius:0, borderWidth:1.5, fill:false});
   });
+  // company budget / target line
+  if(state.targets&&state.targets.length){
+    ds.push({label:"Budget target", data:state.targets.map(p=>({x:toX(parseD(p.date).getTime()),y:p.value})),
+      borderColor:FORECAST, backgroundColor:FORECAST, tension:0, pointRadius:2.5, borderWidth:2.5, fill:false});
+  }
   const mp=state.milestones.map(m=>({x:toX(parseD(m.date).getTime()),y:m.target}));
   if(mp.length) ds.push({label:"Milestone", data:mp, showLine:false, pointStyle:"rectRot", pointRadius:9,
     pointBackgroundColor:FORECAST, pointBorderColor:"#fff", pointBorderWidth:2});
